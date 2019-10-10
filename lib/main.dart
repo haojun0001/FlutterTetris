@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:xiaobao_tetris/random_tetris.dart';
 
 void main() {
   runApp(MyApp());
@@ -62,49 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                     new Container(
                       height: 100,
-                      child: GridView.count(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
-                          padding: EdgeInsets.all(2.0),
-                          children: <Widget>[
-                            Container(
-                            ),
-                            Container(
-                              color: Colors.yellow,
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                              color: Colors.yellow,
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                              color: Colors.yellow,
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                            Container(
-                              color: Colors.yellow,
-                            ),
-                            Container(
-                            ),
-                            Container(
-                            ),
-                          ]),
+                      child: RandomTetrisWidget(),
                     )
                   ],
                 ),
