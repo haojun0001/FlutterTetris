@@ -1,27 +1,16 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:xiaobao_tetris/tetris_block.dart';
 
 void main() {
   runApp(MyApp());
-  if (Platform.isAndroid) {
-    // 以下两行 设置android状态栏为透明的沉浸。写在组件渲染之后，是为了在渲染后进行set赋值，覆盖状态栏，写在渲染之前MaterialApp组件会覆盖掉这个值。
-    SystemUiOverlayStyle systemUiOverlayStyle =
-        SystemUiOverlayStyle(statusBarColor: Colors.transparent);
-    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-  }
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '小宝工具箱 ',
+      title: '小宝游戏箱 ',
       theme: ThemeData(
         primarySwatch: Colors.grey[150],
       ),
@@ -38,42 +27,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  //移动中图像
-  List<List<int>> nowBlock;
-  //已固定图像
-  List<List<int>> fixedBlock;
-  //下落过程中方块的坐标
-  int x;
-  int y;
-  int nowblockType;
-  int nowturnState;
-  int nextblockType;
-  int nextturnState;
+  BlockAttribute blcA = new BlockAttribute();
   List<List<int>> nextRandomTetris;
-
   @override
   void initState() {
     super.initState();
-    fixedBlock = List.generate(20, (i) => List.generate(10, (j) => 0));
-    nowBlock = List.generate(20, (i) => List.generate(10, (j) => 0));
-    nowblockType = Random().nextInt(7);
-    nowturnState = Random().nextInt(4);
-    x = 4;
-    y = 0;
-    TetrisBlock.showNowBlock(nowBlock, nowblockType, nowturnState, x, y);
-
-    nextblockType = Random().nextInt(7);
-    nextturnState = Random().nextInt(4);
-    nextRandomTetris = TetrisBlock.block[nextblockType][nextturnState];
+    TetrisBlock.init(blcA);
+    nextRandomTetris =
+        TetrisBlock.block[blcA.nextblockType][blcA.nextturnState];
     Timer.periodic(Duration(seconds: 2), (timer) {
-      // timer.cancel();
-      // timer = null;
       //判断游戏是否结束
       setState(() {
-        nextblockType = Random().nextInt(7);
-        nextturnState = Random().nextInt(4);
-        nextRandomTetris = TetrisBlock.block[nextblockType][nextturnState];
-        // x++;
+        TetrisBlock.downEvent(blcA);
+        nextRandomTetris =
+            TetrisBlock.block[blcA.nextblockType][blcA.nextturnState];
+        // timer.cancel();
+        // timer = null;
       });
     });
   }
@@ -83,9 +52,58 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  selectView(IconData icon, String text, String id) {
+    return new PopupMenuItem<String>(
+        value: id,
+        child: new Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            new Icon(icon, color: Colors.blue),
+            new Text(text),
+          ],
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50),
+          child: new AppBar(
+            title: new Text('小宝游戏箱-俄罗斯方块'),
+            leading: new Icon(Icons.home),
+            backgroundColor: Colors.blue,
+            centerTitle: true,
+            actions: <Widget>[
+              // 非隐藏的菜单
+              // 隐藏的菜单
+              new PopupMenuButton<String>(
+                itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+                  this.selectView(Icons.play_arrow, '开始', 'A'),
+                  this.selectView(Icons.stop, '暂停', 'B'),
+                  this.selectView(Icons.autorenew, '重置', 'C'),
+                  this.selectView(Icons.navigate_next, '加快', 'E'),
+                  this.selectView(Icons.navigate_before, '减慢', 'D'),
+                ],
+                onSelected: (String action) {
+                  // 点击选项的时候
+                  switch (action) {
+                    case 'A':
+                      break;
+                    case 'B':
+                      break;
+                    case 'C':
+                      break;
+                    case 'E':
+                      break;
+                    case 'D':
+                      break;
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
         backgroundColor: Colors.green,
         body: Column(
           children: <Widget>[
@@ -96,14 +114,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    height: MediaQuery.of(context).size.height - 176,
+                    height: MediaQuery.of(context).size.height - 149 - 24 - 50,
                     color: Colors.grey[300],
                     child: Column(
                       children: <Widget>[
                         new Padding(padding: new EdgeInsets.only(top: 50)),
                         new Text('总分', style: TextStyle(fontSize: 18)),
                         new Padding(padding: new EdgeInsets.only(top: 5)),
-                        new Text('0',
+                        new Text(blcA.resultValue.toString(),
                             style: TextStyle(fontSize: 36, color: Colors.red)),
                         new Padding(padding: new EdgeInsets.only(top: 15)),
                         new Text('下一方块', style: TextStyle(fontSize: 16)),
@@ -111,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           height: 150,
                           child: GridView.builder(
                             itemBuilder: (BuildContext context, int index) {
-                              return TetrisBlock.buildnextBlackByNum(
+                              return TetrisBlock.buildnextBlack(
                                   nextRandomTetris, index);
                             },
                             itemCount: 16,
@@ -131,16 +149,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                      height: MediaQuery.of(context).size.height - 176,
+                      height:
+                          MediaQuery.of(context).size.height - 149 - 24 - 50,
                       color: Colors.grey[200],
                       child: GridView.builder(
                         padding: EdgeInsets.only(top: 0),
                         itemBuilder: (BuildContext context, int index) {
-                          return TetrisBlock.buildBlackByNum(nowBlock, index);
+                          return TetrisBlock.buildMainBlack(
+                              blcA.nowBlock, index);
                         },
-                        itemCount: 200,
+                        itemCount: TetrisBlock.getitemCount(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 10,
+                            crossAxisCount: TetrisBlock.colNum,
                             crossAxisSpacing: 2,
                             mainAxisSpacing: 2,
                             childAspectRatio: 1),
@@ -150,7 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             //操作区
             SizedBox(
-              height: 176.0,
+              height: 149,
               child: Flex(
                 direction: Axis.horizontal,
                 children: <Widget>[
@@ -162,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Expanded(
                     flex: 4,
                     child: Container(
-                        padding: EdgeInsets.only(top: 10),
+                        padding: EdgeInsets.only(top: 2),
                         color: Colors.grey[100],
                         alignment: Alignment.center,
                         child: GridView.count(
@@ -181,11 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape: CircleBorder(),
                                     onPressed: () {
                                       setState(() {
-                                        y--;
-                                        TetrisBlock.copyFixToNowBlock(
-                                            fixedBlock, nowBlock);
-                                        TetrisBlock.showNowBlock(nowBlock,
-                                            nowblockType, nowturnState, x, y);
+                                        TetrisBlock.upMove(blcA);
                                       });
                                     }),
                               ),
@@ -199,11 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape: CircleBorder(),
                                     onPressed: () {
                                       setState(() {
-                                        x--;
-                                        TetrisBlock.copyFixToNowBlock(
-                                            fixedBlock, nowBlock);
-                                        TetrisBlock.showNowBlock(nowBlock,
-                                            nowblockType, nowturnState, x, y);
+                                        TetrisBlock.leftMove(blcA);
                                       });
                                     }),
                               ),
@@ -217,11 +229,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape: CircleBorder(),
                                     onPressed: () {
                                       setState(() {
-                                        x++;
-                                        TetrisBlock.copyFixToNowBlock(
-                                            fixedBlock, nowBlock);
-                                        TetrisBlock.showNowBlock(nowBlock,
-                                            nowblockType, nowturnState, x, y);
+                                        TetrisBlock.rightMove(blcA);
                                       });
                                     }),
                               ),
@@ -235,17 +243,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                     shape: CircleBorder(),
                                     onPressed: () {
                                       setState(() {
-                                        y++;
-                                        TetrisBlock.copyFixToNowBlock(
-                                            fixedBlock, nowBlock);
-                                        TetrisBlock.showNowBlock(nowBlock,
-                                            nowblockType, nowturnState, x, y);
+                                        TetrisBlock.downMove(blcA);
                                       });
                                     }),
                               ),
                               Container()
                             ])),
                   ),
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                        color: Colors.grey[100],
+                      )),
                   Expanded(
                     flex: 4,
                     child: Container(
@@ -263,11 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           shape: CircleBorder(),
                           onPressed: () {
                             setState(() {
-                              nowturnState = (nowturnState + 1) % 4;
-                              TetrisBlock.copyFixToNowBlock(
-                                  fixedBlock, nowBlock);
-                              TetrisBlock.showNowBlock(
-                                  nowBlock, nowblockType, nowturnState, x, y);
+                              TetrisBlock.changeMove(blcA);
                             });
                           }),
                     ),
