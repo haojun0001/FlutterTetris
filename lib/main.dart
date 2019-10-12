@@ -93,7 +93,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     case 'B':
                       break;
                     case 'C':
-                      break;
+                      {
+                        TetrisBlock.init(blcA);
+                        break;
+                      }
                     case 'E':
                       break;
                     case 'D':
